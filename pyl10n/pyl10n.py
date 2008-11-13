@@ -1,5 +1,22 @@
 #!/usr/bin/env python
-# vim:ts=8:sw=4:sts=4:et
+# vim: set ts=8 sw=4 sts=4 et:
+#=======================================================================
+# Copyright (C) 2008, OSSO B.V.
+# This file is part of Pyl10n.
+#
+# Pyl10n is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# Pyl10n is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with Pyl10n.  If not, see <http://www.gnu.org/licenses/>.
+#=======================================================================
 import __builtin__, os, cPickle as pickle, sys
 
 #
@@ -54,7 +71,7 @@ import __builtin__, os, cPickle as pickle, sys
 # * Python does not honor mon_grouping for monetary values.
 #
 
-_locale_path = os.path.join(os.path.dirname(__file__), 'locale')
+_locale_path = os.path.join(os.path.dirname(__file__), '..', 'locale')
 _current_lang_callable = lambda: 'C'
 
 def setlocale(language):
@@ -90,7 +107,7 @@ def format(format, val, grouping=False, monetary=False, callable=None):
     conv = localeconv(callable)
 
     ret = format % val
-    if u'e' in ret: # we're looking at exponents.. blame the user
+    if u'e' in ret or u'E' in ret: # we're looking at exponents.. blame the user
         return ret
     return _group_and_decimal(ret, grouping, conv['decimal_point'], \
             conv['thousands_sep'], conv['grouping'])
@@ -160,7 +177,7 @@ def currency(val, symbol=True, grouping=False, international=False, callable=Non
     return ret
 
 def str(val, callable=None):
-    return format('%f', val, callable=callable)
+    return format('%s', val, callable=callable)
 
 def _get_category(language, category):
     try:
