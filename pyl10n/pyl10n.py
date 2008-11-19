@@ -17,7 +17,11 @@
 # You should have received a copy of the GNU General Public License
 # along with Pyl10n.  If not, see <http://www.gnu.org/licenses/>.
 #=======================================================================
-import __builtin__, os, cPickle as pickle, sys
+import __builtin__, os, sys
+try:
+    import cPickle as pickle
+except:
+    import pickle
 
 #
 # IMPLEMENTED:
@@ -176,8 +180,28 @@ def currency(val, symbol=True, grouping=False, international=False, callable=Non
 
     return ret
 
+def atof(string, allow_grouping=True, func=float, callable=None):
+    conv = localeconv(callable)
+    if allow_grouping:
+        ts = conv['thousands_sep']
+        ds = conv['decimal_point']
+        if u'.' in string and u'.' not in (ts, ds):
+            raise ValueError, 'invalid decimal separator found'
+        string = string.replace(ts, u'') # get rid of grouping (ignore position)
+    else:
+        ds = conv['decimal_point']
+        if u'.' in string and u'.' != ds:
+            raise ValueError, 'invalid decimal separator found'
+    if ds != u'':
+        string = string.replace(ds, u'.')
+    return func(string)
+
+def atoi(string, *args, **kwargs):
+    kwargs['func'] = int
+    return atof(string, *args, **kwargs)
+
 def str(val, callable=None):
-    return format('%s', val, callable=callable)
+    return format('%.12g', val, callable=callable)
 
 def _get_category(language, category):
     try:
@@ -251,6 +275,9 @@ if __name__ == '__main__':
             for monetary in (False, True):
                 lval = locale.format('%f', val, True, monetary).decode('utf-8')
                 pval = format('%f', val, True, monetary)
+                if not monetary:
+                    assert val == locale.atof(lval) and val == atof(pval), \
+                            'atof() is broken on value \'%s\'' % (val,)
                 print '%24s|%24s' % (lval, pval)
         for val in (0.7, -0.7, 1234567.89, -1234567.89):
             for intl in (False, True):
@@ -258,6 +285,17 @@ if __name__ == '__main__':
                 pval = currency(val, True, True, intl)
                 print '%24s|%24s' % (lval, pval)
         print
+
+        if lang == 'nl_NL':
+            assert atof('1012,34', allow_grouping=True) == 1012.34
+            try: atof('123.000', allow_grouping=False)
+            except: pass
+            else: assert False, 'atof() should\'ve raised an exception'
+        elif lang == 'en_US':
+            assert atof('1,012.34', allow_grouping=True) == 1012.34
+            try: atof('123,000', allow_grouping=False)
+            except: pass
+            else: assert False, 'atof() should\'ve raised an exception'
 
         print 'All available locale data:\n  ', localeconvext()
         print
