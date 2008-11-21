@@ -102,7 +102,7 @@ def localeconvext(callable=None):
         ret[category] = _get_category(language, category)
     return ret
 
-def format(format, val, grouping=False, monetary=False, callable=None):
+def format(format, val, grouping=False, monetary=False, dutch_rounding=False, callable=None):
     if monetary:
         assert format == u'%f'
         return currency(val, False, grouping, callable=callable)
@@ -110,16 +110,17 @@ def format(format, val, grouping=False, monetary=False, callable=None):
     assert len(format) and format[0] == u'%'
     conv = localeconv(callable)
 
+    if dutch_rounding:
+        val = dutch_round(val, _format_to_fractionals(format))
     ret = format % val
     if u'e' in ret or u'E' in ret: # we're looking at exponents.. blame the user
         return ret
     return _group_and_decimal(ret, grouping, conv['decimal_point'], \
             conv['thousands_sep'], conv['grouping'])
 
-def currency(val, symbol=True, grouping=False, international=False, callable=None):
+def currency(val, symbol=True, grouping=False, international=False, dutch_rounding=False, callable=None):
     conv = localeconv(callable)
     neg = val < 0
-    val = abs(val)
 
     if neg:
         symbol_before = bool(conv['n_cs_precedes'])
@@ -145,6 +146,9 @@ def currency(val, symbol=True, grouping=False, international=False, callable=Non
         fractionals = int(conv['frac_digits'])
         space_between_symbol_value = ('', ' ')[sep_by_space]
 
+    if dutch_rounding:
+        val = dutch_round(val, fractionals)
+    val = abs(val)
     ret = (u'%%.%if' % fractionals) % val
     ret = _group_and_decimal(ret, grouping, conv['mon_decimal_point'], \
             conv['mon_thousands_sep'], conv['mon_grouping'])
@@ -200,8 +204,35 @@ def atoi(string, *args, **kwargs):
     kwargs['func'] = int
     return atof(string, *args, **kwargs)
 
+def dutch_round(val, fractionals):
+    for i in range(fractionals):
+        val *= 10.0
+    leftovers = round(val % 1, 4) # round because float fluctuates
+    if leftovers == 0.5:
+        val = int(round(val, 4))
+        if val % 2 == 1:
+            val += (1, -1)[val < 0]
+    else:
+        val = round(val, 0)
+    for i in range(fractionals):
+        val /= 10.0
+    return val
+    
 def str(val, callable=None):
     return format('%.12g', val, callable=callable)
+
+def _format_to_fractionals(format):
+    try:
+        i = format.index('.')
+        for j in range(i + 1, len(format)):
+            if format[j] not in '0123456789':
+                fractionals = int(format[i+1:j])
+                break
+        else:
+            fractionals = int(fractionals[i+1])
+    except ValueError:
+        fractionals = 0
+    return fractionals
 
 def _get_category(language, category):
     try:
@@ -241,7 +272,7 @@ def _group(val, group_char, group_list):
         i -= group
     # concat and return
     return sign + group_char.join(ret)
-    
+
 def _group_and_decimal(val, grouping, decimal_char, group_char, group_list):
     if grouping:
         if u'.' in val:
@@ -250,6 +281,7 @@ def _group_and_decimal(val, grouping, decimal_char, group_char, group_list):
         else:
             return _group(val, group_char, group_list)
     return val.replace(u'.', decimal_char)
+
 
 if __name__ == '__main__':
     import locale
