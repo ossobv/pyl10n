@@ -22,13 +22,13 @@
 import pyl10n_core as _p
 
 
-def format(format, val, grouping=False, monetary=False, dutch_rounding=False, callable=None):
+def format(format, val, grouping=False, monetary=False, dutch_rounding=False, locale=None):
     if monetary:
         assert format == u'%f'
-        return currency(val, False, grouping, callable=callable)
+        return currency(val, False, grouping, locale=locale)
         
     assert len(format) and format[0] == u'%'
-    conv = _p.localeconv(callable)
+    conv = _p.localeconv(locale)
 
     if dutch_rounding:
         val = dutch_round(val, _format_to_fractionals(format))
@@ -38,8 +38,8 @@ def format(format, val, grouping=False, monetary=False, dutch_rounding=False, ca
     return _group_and_decimal(ret, grouping, conv['decimal_point'], \
             conv['thousands_sep'], conv['grouping'])
 
-def currency(val, symbol=True, grouping=False, international=False, dutch_rounding=False, callable=None):
-    conv = _p.localeconv(callable)
+def currency(val, symbol=True, grouping=False, international=False, dutch_rounding=False, locale=None):
+    conv = _p.localeconv(locale)
     neg = val < 0
 
     if neg:
@@ -104,8 +104,8 @@ def currency(val, symbol=True, grouping=False, international=False, dutch_roundi
 
     return ret
 
-def atof(string, allow_grouping=True, func=float, callable=None):
-    conv = _p.localeconv(callable)
+def atof(string, allow_grouping=True, func=float, locale=None):
+    conv = _p.localeconv(locale)
     if allow_grouping:
         ts = conv['thousands_sep']
         ds = conv['decimal_point']
@@ -138,8 +138,8 @@ def dutch_round(val, fractionals):
         val /= 10.0
     return val
     
-def str(val, callable=None):
-    return format('%.12g', val, callable=callable)
+def str(val, locale=None):
+    return format('%.12g', val, locale=locale)
 
 def _format_to_fractionals(format):
     try:
