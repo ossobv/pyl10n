@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # vim: set ts=8 sw=4 sts=4 et:
 #=======================================================================
-# Copyright (C) 2008, OSSO B.V.
+# Copyright (C) 2008,2009, Walter Doekes (wdoekes) at OSSO B.V.
 # This file is part of Pyl10n.
 #
 # Pyl10n is free software: you can redistribute it and/or modify
@@ -17,35 +17,63 @@
 # You should have received a copy of the GNU General Public License
 # along with Pyl10n.  If not, see <http://www.gnu.org/licenses/>.
 #=======================================================================
+
+
+# INTRODUCTION
+# ============
+# Pyl10n is a thread-safe /locale module/ replacement. Pyl10ngen
+# converts libc-supplied locale sources files to pickled python files
+# usable by pyl10n.
+#
+# Parsing the libc locale files has been pure guesswork. So sometimes
+# the results may not be what the original author intended. See the BUGS
+# / NOTES section for a couple of questions that remain.
+
+
+# QUICK HOWTO
+# ===========
+# You shouldn't need to run this file. Preconverted languages files can
+# be found where these python files are distributed:
+# http://code.osso.nl/projects/pyl10n/
+
+
+# BUGS / NOTES
+# ============
+#  * Comments might be legal further on the line, but its not used
+#    often (only 3 out of 226 files do that).
+#    Example: Language file as_IN corrupt: unexpected data:
+#     \_ IGNORE;IGNORE;IGNORE;%... (%...)
+#  * We only use the categories defines in the CATEGORIES list and not
+#    LC_CTYPE/LC_COLLATE.. they are complicated and beyond the scope of
+#    pyl10ns intentions right now.
+#  * I suspect that the copy keyword in a category tells us that you
+#    should only read that category from the copied file. Currently it
+#    reads everything from copied files (and uses loop_check to guard
+#    against infinite recursion).
+#  * There is an 'include' keyword. We don't use it yet.
+#  * We strip trailing zeroes from a list (e.g. mon_grouping 3;3;0
+#    becomes [3,3]). This is not a bug but a deviation from the
+#    C-documentation.
+
+
 import itertools, os, re
 
-#
-# BUGS:
-#
-# * Comment might be legal further on the line, but its not used often (only 3 out of 226 files do that).
-#   E.g.: Language file as_IN corrupt: unexpected data: IGNORE;IGNORE;IGNORE;%... (%...)
-#
-# * We only use the CATEGORIES defined below, and not LC_CTYPE/LC_COLLATE.. they are complicated and beyond the scope
-#   of the fix, right now.
-#
-# * I suspect that the copy keyword in a category tells us that you should only read that category from the copied
-#   file. Currently it reads everything from copied files (and uses loop_check to fix infinite recursion).
-#
-# * There is an 'include' keyword. We don't use it yet.
-#
-# * We strip trailing zeroes from a list (e.g. mon_grouping 3;3;0 becomes [3,3]). This is not a bug but a deviation
-#   from the C-documentation.
-#
-
-
 # Read only these categories.. set to None to read all.
-CATEGORIES = ('LC_ADDRESS', 'LC_MEASUREMENT', 'LC_MONETARY', 'LC_NAME', 'LC_NUMERIC', 'LC_PAPER', 'LC_TELEPHONE', 'LC_TIME')
+CATEGORIES = ('LC_ADDRESS', 'LC_MEASUREMENT', 'LC_MONETARY', \
+              'LC_NAME', 'LC_NUMERIC', 'LC_PAPER', 'LC_TELEPHONE', \
+              'LC_TIME')
+
 
 class ParseException(Exception):
     pass
 
+
 def parse_args(string, escape_char):
-    re_nextarg = re.compile(r'(\s*(LC_[A-Z]+|[A-Za-z_:-]+|"[^"]*"|-?[0-9]+|<[0-9A-Za-z_-]+>|<[0-9A-Za-z_-]+>..<[0-9A-Za-z_-]+>|\(<[0-9A-Za-z_-]+>,<[0-9A-Za-z_-]+>\))\s*)')
+    re_nextarg = re.compile(r'(\s*(%s)\s*)' % '|'.join([
+        r'LC_[A-Z]+', r'[A-Za-z_:-]+', r'"[^"]*"', r'-?[0-9]+',
+        r'<[0-9A-Za-z_-]+>', r'<[0-9A-Za-z_-]+>..<[0-9A-Za-z_-]+>',
+        r'\(<[0-9A-Za-z_-]+>,<[0-9A-Za-z_-]+>\)'
+    ]))
     ret = []
 
     i = 0
@@ -79,7 +107,6 @@ def parse_args(string, escape_char):
 
     return ret
     
-
 def parse_libc_localedata(filename, loop_check = None):
     # Trap infinite recursion
     loop_check = loop_check or []
@@ -196,40 +223,49 @@ def parse_libc_localedata(filename, loop_check = None):
             del ret[key]
     return ret
 
-
-if __name__ == '__main__':
-    import cPickle as pickle, re, os, sys
+def get_libc_sources(locale_path='/usr/share/i18n/locales'):
+    import re, os
     file_match = re.compile(r'^[a-z]+_[A-Z]+$')
-    locale_source = '/usr/share/i18n/locales'
-    locale_destination = os.path.join(os.path.dirname(__file__), 'locale')
 
-    in_languages = []
-    for file in os.listdir(locale_source):
+    sources = []
+    for file in os.listdir(locale_path):
         if file_match.match(file):
-            in_languages.append(file)
-    in_languages.sort()
+            sources.append((file, os.path.join(locale_path, file)))
+    sources.sort()
+    return sources
 
-#    in_languages = ['csb_PL']
-#
+def convert_all_libc_locales(src_path, dst_path):
+    try: import cPickle as pickle
+    except: import pickle
+    import os, sys
+
+    languages = get_libc_sources(src_path)
+#    languages = [('csb_PL', os.path.join(src_path, 'csb_PL'))]
 #    print parse_args('"<U003B>"', '/')
-#    import sys
 #    sys.exit(1)
     
     print 'Processing languages...'
-    for language in in_languages:
-        sys.stdout.write('\r%s\r%s' % (' ' * 16, language))
+    for language in languages:
+        sys.stdout.write('\r%s\r%s' % (' ' * 16, language[0]))
         sys.stdout.flush()
         try:
-            locale_info = parse_libc_localedata(os.path.join(locale_source, language))
-            try: os.mkdir(os.path.join(locale_destination, language))
+            localedata = parse_libc_localedata(language[1])
+            try: os.mkdir(os.path.join(dst_path, language[0]))
             except OSError: pass
-
-            for category in locale_info:
-                destination = open(os.path.join(locale_destination, language, category), 'wb')
-                pickle.dump(locale_info[category], destination, pickle.HIGHEST_PROTOCOL)
-
+            for category in localedata:
+                dst_file = open(os.path.join(dst_path, language[0], category), 'wb')
+                pickle.dump(localedata[category], dst_file, pickle.HIGHEST_PROTOCOL)
+                del dst_file
         except ParseException, e:
             sys.stdout.write('\n')
-            sys.stderr.write('Language file %s corrupt: %s\n' % (language, e))
+            sys.stderr.write('Language file %s corrupt: %s\n' % (language[1], e))
 
     print '\r%s\r...done' % (' ' * 16,)
+
+
+if __name__ == '__main__':
+    import os
+    convert_all_libc_locales(
+        '/usr/share/i18n/locales',
+        os.path.join(os.path.dirname(__file__), '..', 'locale')
+    )

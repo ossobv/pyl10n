@@ -1,7 +1,8 @@
 #!/usr/bin/env python
+# Copyright (C) 2008,2009, OSSO B.V.
 # vim: set ts=8 sw=4 sts=4 et:
 #=======================================================================
-# Copyright (C) 2008, OSSO B.V.
+# Copyright (C) 2008,2009, Walter Doekes (wdoekes) at OSSO B.V.
 # This file is part of Pyl10n.
 #
 # Pyl10n is free software: you can redistribute it and/or modify
@@ -17,274 +18,120 @@
 # You should have received a copy of the GNU General Public License
 # along with Pyl10n.  If not, see <http://www.gnu.org/licenses/>.
 #=======================================================================
-import __builtin__, os, sys
-try:
-    import cPickle as pickle
-except:
-    import pickle
 
+
+# INTRODUCTION
+# ============
+# Pyl10n is a thread-safe /locale module/ replacement. Most functions
+# behave very similarly to their locale.* counterparts.
 #
-# IMPLEMENTED:
+# Load this file (pyl10n.py) to get all functionality, e.g.:
+# {{{
+# import path.to.pyl10n as locale
+# }}}
+# 
+# The functions that are currently implemented are the following, the
+# (+) marks functions that are not found in the regular locale module.
+# Most functions will also accept an optional callable that returns 
 #
-# Most functions behave very or exactly similarly to their locale.* counterpart.
+# FILE pyl10n_core:
+#  * localeconv
+#  * localeconv_by_category (+)
+#  * setlocale
+#  * setlocalefunc (+)
 #
-# Globals modification:
-# * setlocale() <= application wide locale setting: use nl_NL instead of nl_NL.utf-8!
-# * setlocalefunc() <= uses a callable should return a string (for django this would be
-#   lambda: to_locale(get_language()))
+# FILE pyl10n_numeric
+#  * atof
+#  * atoi
+#  * currency
+#  * dutch_round (+)
+#  * format
+#  * str
 #
-# The following functions take an optional callable so you don't have to call
-# setlocalefunc():
-# * localeconv() <= works as intended
-# * localeconvext() <= loads all available locale categories into a dictionary
-# * format() <= limited to a single format specified (e.g. '%08d')
-# * currency() <= works as intended
-# * str() <= calls format with %f
+# FILE pyl10n_time
+#  * format_date (+)
+#  * format_datetime (+)
+#  * format_time (+)
+#  * strftime
 
+
+# QUICK HOWTO
+# ===========
+# Before using pyl10n, make sure that the path in pyl10n_core is set up
+# correctly for your file layout. Edit the following statement to fit
+# your needs:
+# {{{
+# _locale_path = os.path.join(os.path.dirname(__file__), '..', 'locale')
+# }}}
 #
-# NOT IMPLEMENTED:
+# Using pyl10n like locale:
+# {{{
+# import path.to.pyl10n as locale
+# locale.setlocale('nl_NL')
+# print locale.currency(12345.67)
+# }}}
 #
-# * Must be implemented: atof, atoi, 
-# * Will be replaced: DAY_1 etc.. will be replaced with a time formatting function.
-# * Should be implemented: address/telephone formatting functions
-# * Won't be implemented any time soon: strcoll, strxfrm, format_string.
+# Using pyl10n in your threaded app:
+# {{{
+# import path.to.pyl10n as locale, datetime
+# locale.setlocalefunc(some_func_that_returns_locale_for_current_thread)
+# print locale.format_time(datetime.datetime.now())
+# }}}
 #
-
-#
-# BUGS:
-#
-# * Exception handling in _get_category is not properly done yet.
-#
-# * The locale_path is 'hardcoded' as relative to __file__.
-#
-# * The standard is unclear about how to handle [np]_sep_by_space for international
-#   symbols. We assume that the space is an optional fourth character in int_curr_symbol.
-#
-# * format(...monetary=True) gets handled by currency(). This means that your format string
-#   will be ignored.
-#
-# * string.letters is not modified when calling setlocale(). (In fact, no CTYPE/COLLATE
-#   locale settings are used.)
-#
-
-#
-# PYTHON BUGS:
-#
-# * Python is inconsistent with stripping or not stripping trailing zeroes from lists.
-#
-# * Python does not honor mon_grouping for monetary values.
-#
-
-_locale_path = os.path.join(os.path.dirname(__file__), '..', 'locale')
-_current_lang_callable = lambda: 'C'
-
-def setlocale(language):
-    setlocalefunc(lambda: language)
-
-def setlocalefunc(callable):
-    global _current_lang_callable
-    _current_lang_callable = callable
-
-def localeconv(callable=None):
-    language = _get_language(callable)
-    ret = {}
-    ret.update(_get_category(language, 'LC_MONETARY'))
-    ret.update(_get_category(language, 'LC_NUMERIC'))
-    # We've removed trailing zeroes at generation time
-    assert 0 not in ret['grouping'] and 0 not in ret['mon_grouping']
-    return ret
-
-def localeconvext(callable=None):
-    language = _get_language(callable)
-    ret = {}
-    for category in ('LC_ADDRESS', 'LC_MEASUREMENT', 'LC_MONETARY', 'LC_NAME', \
-            'LC_NUMERIC', 'LC_PAPER', 'LC_TELEPHONE', 'LC_TIME'):
-        ret[category] = _get_category(language, category)
-    return ret
-
-def format(format, val, grouping=False, monetary=False, dutch_rounding=False, callable=None):
-    if monetary:
-        assert format == u'%f'
-        return currency(val, False, grouping, callable=callable)
-        
-    assert len(format) and format[0] == u'%'
-    conv = localeconv(callable)
-
-    if dutch_rounding:
-        val = dutch_round(val, _format_to_fractionals(format))
-    ret = format % val
-    if u'e' in ret or u'E' in ret: # we're looking at exponents.. blame the user
-        return ret
-    return _group_and_decimal(ret, grouping, conv['decimal_point'], \
-            conv['thousands_sep'], conv['grouping'])
-
-def currency(val, symbol=True, grouping=False, international=False, dutch_rounding=False, callable=None):
-    conv = localeconv(callable)
-    neg = val < 0
-
-    if neg:
-        symbol_before = bool(conv['n_cs_precedes'])
-        sign = conv['negative_sign']
-        sep_by_space = bool(conv['n_sep_by_space'])
-        positioning = conv['n_sign_posn']
-    else:
-        symbol_before = bool(conv['p_cs_precedes'])
-        sign = conv['positive_sign']
-        sep_by_space = bool(conv['p_sep_by_space'])
-        positioning = conv['p_sign_posn']
-
-    if international:
-        symbol_char = conv['int_curr_symbol']
-        fractionals = int(conv['int_frac_digits'])
-        if len(symbol_char) > 3:
-            space_between_symbol_value = symbol_char[3]
-        else:
-            space_between_symbol_value = ''
-        symbol_char = symbol_char[0:3]
-    else:
-        symbol_char = conv['currency_symbol']
-        fractionals = int(conv['frac_digits'])
-        space_between_symbol_value = ('', ' ')[sep_by_space]
-
-    if dutch_rounding:
-        val = dutch_round(val, fractionals)
-    val = abs(val)
-    ret = (u'%%.%if' % fractionals) % val
-    ret = _group_and_decimal(ret, grouping, conv['mon_decimal_point'], \
-            conv['mon_thousands_sep'], conv['mon_grouping'])
-
-    if not symbol:
-        if positioning == 0:
-            return u'(%s%s%s)' % (ret,)
-        elif positioning == 1 or positioning == 3 or positioning == 127:
-            return u'%s%s' % (sign, ret)
-        elif positioning == 2 or positioning == 4:
-            return u'%s%s' % (ret, sign)
-        assert False
-        
-    if symbol_before:
-        args = [symbol_char, space_between_symbol_value, ret]
-    else:
-        args = [ret, space_between_symbol_value, symbol_char]
-
-    if positioning == 0:
-        ret = u'(%s%s%s)' % tuple(args)
-    else:
-        if positioning == 1 or (positioning == 3 and symbol_before) or positioning == 127:
-            args.insert(0, sign)
-        elif positioning == 2 or (positioning == 4 and not symbol_before):
-            args.append(sign)
-        elif positioning == 3:
-            args.insert(2, sign)
-        elif positioning == 4:
-            args.insert(1, sign)
-        else:
-            assert False
-        ret = u'%s%s%s%s' % tuple(args)
-
-    return ret
-
-def atof(string, allow_grouping=True, func=float, callable=None):
-    conv = localeconv(callable)
-    if allow_grouping:
-        ts = conv['thousands_sep']
-        ds = conv['decimal_point']
-        if u'.' in string and u'.' not in (ts, ds):
-            raise ValueError, 'invalid decimal separator found'
-        string = string.replace(ts, u'') # get rid of grouping (ignore position)
-    else:
-        ds = conv['decimal_point']
-        if u'.' in string and u'.' != ds:
-            raise ValueError, 'invalid decimal separator found'
-    if ds != u'':
-        string = string.replace(ds, u'.')
-    return func(string)
-
-def atoi(string, *args, **kwargs):
-    kwargs['func'] = int
-    return atof(string, *args, **kwargs)
-
-def dutch_round(val, fractionals):
-    for i in range(fractionals):
-        val *= 10.0
-    leftovers = round(val % 1, 4) # round because float fluctuates
-    if leftovers == 0.5:
-        val = int(round(val, 4))
-        if val % 2 == 1:
-            val += (1, -1)[val < 0]
-    else:
-        val = round(val, 0)
-    for i in range(fractionals):
-        val /= 10.0
-    return val
-    
-def str(val, callable=None):
-    return format('%.12g', val, callable=callable)
-
-def _format_to_fractionals(format):
-    try:
-        i = format.index('.')
-        for j in range(i + 1, len(format)):
-            if format[j] not in '0123456789':
-                fractionals = int(format[i+1:j])
-                break
-        else:
-            fractionals = int(fractionals[i+1])
-    except ValueError:
-        fractionals = 0
-    return fractionals
-
-def _get_category(language, category):
-    try:
-        data = open(os.path.join(_locale_path, language, category), 'rb')
-        ret = pickle.load(data)
-        assert type(ret) == dict
-        return ret
-    except Exception, e:
-        print type(e), e
-        return {}
-
-def _get_language(callable = None):
-    global _current_lang_callable
-    callable = callable or _current_lang_callable
-    return _current_lang_callable()
-
-def _group(val, group_char, group_list):
-    if val[0] not in '0123456789':
-        sign = val[0]
-        val = val[1:]
-    else:
-        sign = ''
-
-    ret = []
-    i = len(val)
-    # group_list defines grouping from right to left
-    group = 127
-    for group in group_list:
-        if i <= 0 or group == 127: # CHAR_MAX => no more grouping
-            break
-        # append next group to list
-        ret.insert(0, val[max(0,i-group):i])
-        i -= group
-    # continue with last value from group_list
-    while i > 0:
-        ret.insert(0, val[max(0,i-group):i])
-        i -= group
-    # concat and return
-    return sign + group_char.join(ret)
-
-def _group_and_decimal(val, grouping, decimal_char, group_char, group_list):
-    if grouping:
-        if u'.' in val:
-            left, right = val.split(u'.')
-            return u'%s%s%s' % (_group(left, group_char, group_list), decimal_char, right)
-        else:
-            return _group(val, group_char, group_list)
-    return val.replace(u'.', decimal_char)
+# Quickly switching languages:
+# {{{
+# import path.to.pyl10n as locale, datetime
+# now = datetime.datetime.now()
+# print locale.format_time(now, 'nl_NL')
+# print locale.format_time(now, 'en_US')
+# }}}
 
 
-if __name__ == '__main__':
-    import locale
+# DIFFERENCES WITH LOCALE
+# =======================
+# The following differences with the original locale module should be
+# observed:
+#  * Use only the language/region when specifying the locale.
+#    E.g.: ('nl_NL') instead of (LC_NUMERIC, 'nl_NL.UTF-8').
+#  * Pyl10n does not load variables like DAY_1 etc. in the global
+#    context. You can get them from localeconv_by_category if you need
+#    them. (See the pyl10n_time functions for quick shortcuts.)
+#  * Python is inconsistent with stripping or not stripping trailing
+#    zeroes from lists in locale definitions. Pyl10ngen always strips
+#    trailing zeroes.
+
+
+# BUGS / MISSING FEATURES
+# =======================
+# The following things are missing from pyl10n:
+#  * Proper regression tests are not done yet.
+#  * Address/telephone formatting functions are still missing.
+#  * The locale path is 'hardcoded' relative to __file__ in this file.
+#  * The standard is unclear about how to handle [np]_sep_by_space for
+#    international sumbols. We assume that the space is an optional
+#    fourth character in int_curr_symbol. See
+#    http://bugs.python.org/issue1222 for more information.
+#  * format(...monetary=True) gets handled by currency(). This means
+#    that your format string will be ignored.
+
+
+# WON'T BE IMPLEMENTED
+# ====================
+# The following things will not be implemented at all:
+#  * Character type and collation functions will not be implemented
+#    (e.g. strcoll, strxfrm, format_string).
+#  * string.letters is not modified when calling setlocale(). (See the
+#    previous point.)
+
+
+from pyl10n_core import *
+from pyl10n_numeric import *
+from pyl10n_time import *
+
+
+def pyl10n_old_test():
+    import __builtin__, locale, sys
+
     for lang in ('nl_NL', 'en_US'):
         print u'**** %s ****\n' % (lang,)
         locale.setlocale(locale.LC_MONETARY, lang + '.utf-8')
@@ -329,6 +176,19 @@ if __name__ == '__main__':
             except: pass
             else: assert False, 'atof() should\'ve raised an exception'
 
-        print 'All available locale data:\n  ', localeconvext()
+        print 'All available locale data:'
+        for cat in ('LC_ADDRESS', 'LC_MEASUREMENT', 'LC_MONETARY', \
+                'LC_NAME', 'LC_NUMERIC', 'LC_PAPER', 'LC_TELEPHONE', 'LC_TIME'):
+            print '  ', localeconv_by_category(cat)
         print
 
+
+if __name__ == '__main__':
+    import codecs, locale, sys
+    sys.stdout = codecs.getwriter(locale.getdefaultlocale()[1])(sys.stdout, 'replace')
+
+    pyl10n_core_test()
+    pyl10n_numeric_test()
+    pyl10n_time_test()
+
+    pyl10n_old_test()

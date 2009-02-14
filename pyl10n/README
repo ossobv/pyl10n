@@ -7,7 +7,7 @@ gettext in your localization needs by adding setlocale-like
 functionality without breaking thread-safety with process-wide setlocale
 settings.
 
-Copyright: Walter Doekes, OSSO B.V., 2008.
+Copyright: Walter Doekes at OSSO B.V., 2008,2009.
 Licensing: GPLv3, see COPYING for details.
 
 
@@ -26,7 +26,7 @@ https://code.osso.nl/svn/pyl10n/trunk/pyl10n
 
   Use pyl10ngen.py to generate pickled locale files from the libc plain
 text locale files or get pregenerated files from /pyl10n/trunk/locale.
-Import pyl10n in your python applicqation to get the currently available
+Import pyl10n in your python application to get the currently available
 locale functions.
 
 
