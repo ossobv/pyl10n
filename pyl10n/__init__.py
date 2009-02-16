@@ -25,7 +25,7 @@
 # Pyl10n is a thread-safe /locale module/ replacement. Most functions
 # behave very similarly to their locale.* counterparts.
 #
-# Load this file (pyl10n.py) to get all functionality, e.g.:
+# Load this file (__init__.py) to get all functionality, e.g.:
 # {{{
 # import path.to.pyl10n as locale
 # }}}
