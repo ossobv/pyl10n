@@ -4,6 +4,9 @@ from django.utils.cache import patch_vary_headers
 from django.utils import translation
 from django.utils.translation import get_language
 import pyl10n as locale
+# Or alternately, if you've installed pyl10n in the django l10n dir:
+#import l10n.pyl10n as locale, l10n.pyl10n.pyl10n_core as locale_config, os
+#locale_config._locale_path = os.path.join(os.path.dirname(__file__), '..', 'locale')
 
 
 class L10nMiddleware(object):
