@@ -1,16 +1,23 @@
+import re
 from django.conf import settings
 from django.core.exceptions import MiddlewareNotUsed
-from django.utils.cache import patch_vary_headers
 from django.utils import translation
-from django.utils.translation import get_language
-import pyl10n as locale
-# Or alternately, if you've installed pyl10n in the django l10n dir:
-#import l10n.pyl10n as locale, l10n.pyl10n.pyl10n_core as locale_config, os
-#locale_config._locale_path = os.path.join(os.path.dirname(__file__), '..', 'locale')
+from django.utils.cache import patch_vary_headers
+from project.l10n.locale_loader import locale
+
+
+# Format of Accept-Language header values. From RFC 2616, section 14.4 and 3.9.
+# (stolen from django and modified)
+accept_language_re = re.compile(r'''
+        (?:\s*)                                     # Skip whitespace
+        (([A-Za-z]{1,8})(?:-[A-Za-z]{1,8})*|\*)     # "en", "en-au", "x-y-z", "*"
+        (?:\s*;\s*q=(0(?:\.\d{,3})?|1(?:.0{,3})?))? # Optional "q=1.00", "q=0.8"
+        (?:\s*,\s*|\s*$)                            # Multiple accepts per header.
+''', re.VERBOSE)
 
 
 class L10nMiddleware(object):
-    """
+    '''
     This is an updated version of django's very simple middleware
     that parses a request and decides what translation object to
     install in the current thread context. This allows pages to be
@@ -21,19 +28,20 @@ class L10nMiddleware(object):
     languages.
 
     Also, it sets the pyl10n locale for the current thread.
-    """
+    '''
 
     def __init__(self):
+        if len(settings.LOCALE_PATHS) != 0:
+            locale.setlocalepath(settings.LOCALE_PATHS[0])
         if not hasattr(settings, 'LANGUAGE_CODES') or len(settings.LANGUAGE_CODES) == 0:
-            locale.setlocale(settings.LANGUAGE_CODE) # this is en-us by default
+            locale.setlocale(settings.LANGUAGE_CODE)
+            translation.activate(settings.LANGUAGE_CODE)
             raise MiddlewareNotUsed('A fixed language code was set. Not using Accept-Language headers.')
         locale.setlocalefunc(translation.get_language)
 
     def process_request(self, request):
-        # get_language_from_request returns a two-letter language code (en, nl, sv, etc..)
-        language = translation.get_language_from_request(request)
-        if language not in settings.LANGUAGE_CODES:
-            language = settings.LANGUAGE_CODES[0]
+        # Get valid language code from session, cookie or accept headers
+        language = self.get_valid_language_from_request(request)
         translation.activate(language)
         request.LANGUAGE_CODE = translation.get_language()
 
@@ -43,3 +51,43 @@ class L10nMiddleware(object):
             response['Content-Language'] = translation.get_language()
         translation.deactivate()
         return response
+
+    def get_valid_language_from_request(self, request):
+        # Check session language
+        if hasattr(request, 'session'):
+            lang_code = request.session.get('django_language', None)
+            if lang_code in settings.LANGUAGE_CODES:
+                return lang_code
+
+        # Check cookie language
+        lang_code = request.COOKIES.get(settings.LANGUAGE_COOKIE_NAME)
+        if lang_code in settings.LANGUAGE_CODES:
+            return lang_code
+
+        # Parse Accept-Header
+        languages = self.parse_accept_lang_header(request.META.get('HTTP_ACCEPT_LANGUAGE', ''))
+        for language in languages:
+            # en-us
+            if language[0] in settings.LANGUAGE_CODES:
+                return language[0]
+            # en
+            if language[1] in settings.LANGUAGE_CODES:
+                return language[1]
+
+        # Return default language
+        return settings.LANGUAGE_CODES[0]
+
+    def parse_accept_lang_header(self, lang_string):
+        """
+        Parses the lang_string, which is the body of an HTTP Accept-Language
+        header, and returns a list of (lang, q-value), ordered by 'q' values.
+    
+        Any format errors in lang_string results in an empty list being returned.
+
+        (stolen from django and modified)
+        """
+        pieces = accept_language_re.findall(lang_string)
+        for i, piece in enumerate(pieces):
+            pieces[i] = (piece[0], piece[1], float(piece[2] or 1))
+        pieces.sort(key=lambda x: x[2], reverse=True)
+        return pieces

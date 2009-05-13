@@ -1,9 +1,6 @@
 from django import template
-import pyl10n as locale
-# Or alternately, if you've installed pyl10n in the django l10n dir:
-#import l10n.pyl10n as locale, l10n.pyl10n.pyl10n_core as locale_config, os
-#locale_config._locale_path = os.path.join(os.path.dirname(__file__), '..', '..', 'locale')
-
+# Make sure you use the same module path as in middleware.py
+from project.l10n.locale_loader import locale
 
 register = template.Library()
 
