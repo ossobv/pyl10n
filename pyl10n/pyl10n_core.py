@@ -22,7 +22,9 @@
 import os
 try: import cPickle as pickle
 except: import pickle
+# set default locale path to ../locale/
 _locale_path = os.path.join(os.path.dirname(__file__), '..', 'locale')
+# set default locale to C
 _current_locale_callable = lambda: 'C'
 
 
@@ -30,8 +32,20 @@ def setlocale(locale):
     setlocalefunc(lambda: locale)
 
 def setlocalefunc(callable):
-    global _current_lang_callable
-    _current_lang_callable = callable
+    global _current_locale_callable
+    _current_locale_callable = callable
+
+def setlocalepath(dirname):
+    '''
+    Set directory containing message catalogs.
+
+    Message catalogs will be expected at the filename
+    dirname/locale/category, where locale is a locale
+    name and category is a locale facet such as
+    LC_NUMERIC.
+    '''
+    global _locale_path
+    _locale_path = dirname
 
 def localeconv(locale=None):
     locale = locale or _get_locale()
@@ -60,8 +74,8 @@ def _get_category(locale, category):
         return {}
 
 def _get_locale():
-    global _current_lang_callable
-    return _current_lang_callable()
+    global _current_locale_callable
+    return _current_locale_callable()
 
 def pyl10n_core_test():
     # FIXME: create tests :)

@@ -39,6 +39,7 @@
 #  * localeconv_by_category (+)
 #  * setlocale
 #  * setlocalefunc (+)
+#  * setlocalepath (+)
 #
 # FILE pyl10n_numeric
 #  * atof
@@ -113,6 +114,8 @@
 #    http://bugs.python.org/issue1222 for more information.
 #  * format(...monetary=True) gets handled by currency(). This means
 #    that your format string will be ignored.
+#  * Replace 'category' with 'facet' perhaps?
+#  * Document setlocalepath (and link its usage to bindtextomain(3))
 
 
 # WON'T BE IMPLEMENTED
