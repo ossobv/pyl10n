@@ -31,8 +31,6 @@ class L10nMiddleware(object):
     '''
 
     def __init__(self):
-        if len(settings.LOCALE_PATHS) != 0:
-            locale.setlocalepath(settings.LOCALE_PATHS[0])
         if not hasattr(settings, 'LANGUAGE_CODES') or len(settings.LANGUAGE_CODES) == 0:
             locale.setlocale(settings.LANGUAGE_CODE)
             translation.activate(settings.LANGUAGE_CODE)
