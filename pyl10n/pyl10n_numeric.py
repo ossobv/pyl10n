@@ -54,17 +54,21 @@ def currency(val, symbol=True, grouping=False, international=False, dutch_roundi
         positioning = conv['p_sign_posn']
 
     if international:
-        symbol_char = conv['int_curr_symbol']
         fractionals = int(conv['int_frac_digits'])
-        if len(symbol_char) > 3:
-            space_between_symbol_value = symbol_char[3]
-        else:
-            space_between_symbol_value = ''
-        symbol_char = symbol_char[0:3]
+
+        if symbol:
+            if isinstance(symbol, bool): symbol_char = conv['int_curr_symbol']
+            else: symbol_char = symbol
+            if len(symbol_char) > 3: space_between_symbol_value = symbol_char[3]
+            else: space_between_symbol_value = ''
+            symbol_char = symbol_char[0:3]
     else:
-        symbol_char = conv['currency_symbol']
         fractionals = int(conv['frac_digits'])
-        space_between_symbol_value = ('', ' ')[sep_by_space]
+
+        if symbol:
+            if isinstance(symbol, bool): symbol_char = conv['currency_symbol']
+            else: symbol_char = symbol
+            space_between_symbol_value = ('', ' ')[sep_by_space]
 
     if dutch_rounding:
         val = dutch_round(val, fractionals)

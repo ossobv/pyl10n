@@ -100,6 +100,8 @@
 #  * Python is inconsistent with stripping or not stripping trailing
 #    zeroes from lists in locale definitions. Pyl10ngen always strips
 #    trailing zeroes.
+#  * Extended currency to accept a non-boolean for symbol that will be
+#    used as the currency symbol, e.g. currency='EUR '.
 
 
 # BUGS / MISSING FEATURES
