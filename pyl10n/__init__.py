@@ -49,6 +49,10 @@
 #  * format
 #  * str
 #
+# FILE pyl10n_telephone
+#  * teldom2string (+)
+#  * telint2string (+)
+#
 # FILE pyl10n_time
 #  * format_date (+)
 #  * format_datetime (+)
@@ -108,7 +112,8 @@
 # =======================
 # The following things are missing from pyl10n:
 #  * Proper regression tests are not done yet.
-#  * Address/telephone formatting functions are still missing.
+#  * Address/telephone formatting functions are still missing or very
+#    rudimentary.
 #  * The locale path is 'hardcoded' relative to __file__ in this file.
 #  * The standard is unclear about how to handle [np]_sep_by_space for
 #    international sumbols. We assume that the space is an optional
@@ -131,6 +136,7 @@
 
 from pyl10n_core import *
 from pyl10n_numeric import *
+from pyl10n_telephone import *
 from pyl10n_time import *
 
 
@@ -194,6 +200,7 @@ if __name__ == '__main__':
 
     pyl10n_core_test()
     pyl10n_numeric_test()
+    pyl10n_telephone_test()
     pyl10n_time_test()
 
     pyl10n_old_test()
