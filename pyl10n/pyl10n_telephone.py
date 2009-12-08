@@ -70,11 +70,11 @@ def _tel2string(phone_tuple, fmt, locale_dict=None):
     nat_select = '0'
 
     matches = _percent_re.findall(fmt)
+    last = ''
     for i, v in enumerate(matches):
         if v[0] != '%': continue
         c = v[1] # len(v) == 2 according to _percent_re
 
-        last = ''
         if c == '%': last = matches[i] = '%'
         elif c == 'a': last = matches[i] = area_code
         elif c == 'A': last = matches[i] = '%s%s' % (nat_select, area_code)
