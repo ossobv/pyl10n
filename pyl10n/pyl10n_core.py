@@ -75,7 +75,7 @@ def _get_category(locale, category):
             catcache[category] = ret
         except Exception, e:
             from sys import stderr
-            print >> stderr, 'pyl10n: loading locale file: %s' % e
+            print >> stderr, 'pyl10n: loading locale category: %s' % e
             catcache[category] = {}
         finally:
             if file is not None:
