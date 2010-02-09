@@ -63,15 +63,21 @@ def localeconv_by_category(category, locale=None):
     return _get_category(locale, category)
 
 def _get_category(locale, category):
-    try:
-        data = open(os.path.join(_locale_path, locale, category), 'rb')
-        ret = pickle.load(data)
-        assert type(ret) == dict
-        return ret
-    except Exception, e:
-        from sys import stderr
-        print >> stderr, type(e), e
-        return {}
+    if locale not in _get_category._cache:
+        _get_category._cache[locale] = {}
+    catcache = _get_category._cache[locale]
+    if category not in catcache:
+        try:
+            data = open(os.path.join(_locale_path, locale, category), 'rb')
+            ret = pickle.load(data)
+            assert type(ret) == dict
+            catcache[category] = ret
+        except Exception, e:
+            from sys import stderr
+            print >> stderr, 'pyl10n: loading locale file: %s' % e
+            catcache[category] = {}
+    return catcache[category]
+_get_category._cache = {}
 
 def _get_locale():
     global _current_locale_callable
