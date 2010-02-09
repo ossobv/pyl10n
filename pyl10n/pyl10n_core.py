@@ -67,15 +67,19 @@ def _get_category(locale, category):
         _get_category._cache[locale] = {}
     catcache = _get_category._cache[locale]
     if category not in catcache:
+        file = None
         try:
-            data = open(os.path.join(_locale_path, locale, category), 'rb')
-            ret = pickle.load(data)
+            file = open(os.path.join(_locale_path, locale, category), 'rb')
+            ret = pickle.load(file)
             assert type(ret) == dict
             catcache[category] = ret
         except Exception, e:
             from sys import stderr
             print >> stderr, 'pyl10n: loading locale file: %s' % e
             catcache[category] = {}
+        finally:
+            if file is not None:
+                file.close()
     return catcache[category]
 _get_category._cache = {}
 
