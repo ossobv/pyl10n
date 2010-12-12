@@ -25,7 +25,7 @@ import pyl10n_core as _p
 def format(format, val, grouping=False, monetary=False, dutch_rounding=False, locale=None):
     if monetary:
         assert format == u'%f'
-        return currency(val, False, grouping, locale=locale)
+        return currency(val, False, grouping, dutch_rounding=dutch_rounding, locale=locale)
         
     assert len(format) and format[0] == u'%'
     conv = _p.localeconv(locale)
