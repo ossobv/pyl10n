@@ -1,22 +1,36 @@
+# vim: set ts=8 sw=4 sts=4 et ai:
 from django import template
-# Make sure you use the same module path as in middleware.py
-from project.l10n.locale_loader import locale
+from ..project.l10n import locale # BAAAAH!
+
 
 register = template.Library()
 
 
 @register.filter
-def lcmon(value):
+def lcmon(value, options=''):
     if value in (None, ''):
         return '-'
-    return locale.currency(value, symbol=False, grouping=True)
+    kwargs = {
+        'dutch_rounding': False or 'd' in options,
+        'grouping': True,
+        'symbol': False or 's' in options,
+    }
+    return locale.currency(float(value), **kwargs)
 lcmon.is_safe = True # no one uses < > & ' ", right?
 
 @register.filter
-def lcnum(value, formatstr='%.12g'):
+def lcnum(value, options=''):
     if value in (None, ''):
         return '-'
-    return locale.format(formatstr, float(value), grouping=True)
+    if '%' in options:
+        formatstr = options[options.index('%'):]
+    else:
+        formatstr = '%.12g'
+    kwargs = {
+        'dutch_rounding': False or 'd' in options,
+        'grouping': True,
+    }
+    return locale.format(formatstr, float(value), **kwargs)
 lcnum.is_safe = True # no one uses < > & ' ", right?
 
 @register.filter

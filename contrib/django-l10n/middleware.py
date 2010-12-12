@@ -3,7 +3,7 @@ from django.conf import settings
 from django.core.exceptions import MiddlewareNotUsed
 from django.utils import translation
 from django.utils.cache import patch_vary_headers
-from project.l10n.locale_loader import locale
+from project.l10n import locale
 
 
 # Format of Accept-Language header values. From RFC 2616, section 14.4 and 3.9.
@@ -76,14 +76,14 @@ class L10nMiddleware(object):
         return settings.LANGUAGE_CODES[0]
 
     def parse_accept_lang_header(self, lang_string):
-        """
+        '''
         Parses the lang_string, which is the body of an HTTP Accept-Language
         header, and returns a list of (lang, q-value), ordered by 'q' values.
     
         Any format errors in lang_string results in an empty list being returned.
 
         (stolen from django and modified)
-        """
+        '''
         pieces = accept_language_re.findall(lang_string)
         for i, piece in enumerate(pieces):
             pieces[i] = (piece[0], piece[1], float(piece[2] or 1))

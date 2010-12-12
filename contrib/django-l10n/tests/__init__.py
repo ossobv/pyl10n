@@ -1,5 +1,5 @@
 from django.conf import settings
-from apps.l10n.tests.middleware import *
+from project.l10n.tests.middleware import *
 
 
 # Make sure the middleware is loaded if we're going to test it.
