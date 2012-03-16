@@ -145,8 +145,12 @@ def pyl10n_old_test():
 
     for lang in ('nl_NL', 'en_US'):
         print u'**** %s ****\n' % (lang,)
-        locale.setlocale(locale.LC_MONETARY, lang + '.utf-8')
-        locale.setlocale(locale.LC_NUMERIC, lang + '.utf-8')
+        try:
+            locale.setlocale(locale.LC_MONETARY, lang + '.utf-8')
+            locale.setlocale(locale.LC_NUMERIC, lang + '.utf-8')
+        except locale.Error:
+            raise ValueError('Need %s.utf-8 locale for this test. Please "apt-get install '
+                             'language-pack-nl" or similar..' % (lang,))
         setlocale(lang)
 
         print u'%24s|%24s' % ('[locale]', '[pyl10n]')

@@ -192,5 +192,5 @@ def _group_and_decimal(val, grouping, decimal_char, group_char, group_list):
     return val.replace(u'.', decimal_char)
 
 def pyl10n_numeric_test():
-    # FIXME: create tests :)
+    # TODO: create tests :)
     pass

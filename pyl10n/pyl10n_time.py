@@ -63,8 +63,8 @@ def _strftime(fmt, lc_time, date=None):
         elif c == 'e': matches[i] = '%2i' % lt[2]
         # %E => modifier, not implemented
         elif c == 'F': matches[i] = '%i-%02i-%02i' % (lt[0], lt[1], lt[2])
-        # %G => FIXME, not implemented yet
-        # %g => FIXME, not implemented yet
+        # %G => NOT IMPLEMENTED
+        # %g => NOT IMPLEMENTED
         elif c == 'H': matches[i] = '%02i' % lt[3]
         elif c == 'I': matches[i] = '%02i' % (((lt[3] + 11) % 12) + 1)
         elif c == 'j': matches[i] = '%03i' % lt[7]
@@ -83,18 +83,18 @@ def _strftime(fmt, lc_time, date=None):
         elif c == 't': matches[i] = '\t'
         elif c == 'T': matches[i] = '%02i:%02i:%02i' % (lt[3], lt[4], lt[5])
         elif c == 'u': matches[i] = str(lt[6] + 1)
-        # %U => FIXME, not implemented yet
-        # %V => FIXME, not implemented yet
+        # %U => NOT IMPLEMENTED
+        # %V => NOT IMPLEMENTED
         elif c == 'w': matches[i] = str((lt[6] + 1) % 7)
-        # %W => FIXME, not implemented yet
+        # %W => NOT IMPLEMENTED
         elif c == 'x': matches[i] = _strftime(lc_time['d_fmt'], lc_time, date)
         elif c == 'X': matches[i] = _strftime(lc_time['t_fmt'], lc_time, date)
         elif c == 'y': matches[i] = '%02i' % (lt[0] % 100)
         elif c == 'Y': matches[i] = str(lt[0])
-        # %z => FIXME, not implemented yet # (GNU)
-        # %Z => FIXME, not implemented yet
-        elif c == 'z' or c == 'Z': matches[i] = '' # XXX FIXME
-        # %+ => FIXME, not implemented yet
+        # %z => NOT IMPLEMENTED # (GNU)
+        # %Z => NOT IMPLEMENTED
+        elif c == 'z' or c == 'Z': matches[i] = '' # BROKEN AND NOT IMPLEMENTED
+        # %+ => NOT IMPLEMENTED
 
     return ''.join(matches).strip()
 

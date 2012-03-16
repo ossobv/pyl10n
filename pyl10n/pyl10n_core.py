@@ -88,5 +88,5 @@ def _get_locale():
     return _current_locale_callable()
 
 def pyl10n_core_test():
-    # FIXME: create tests :)
+    # TODO: create tests :)
     pass

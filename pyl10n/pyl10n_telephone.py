@@ -79,11 +79,11 @@ def _tel2string(phone_tuple, fmt, locale_dict=None):
         elif c == 'a': last = matches[i] = area_code
         elif c == 'A': last = matches[i] = '%s%s' % (nat_select, area_code)
         elif c == 'l': last = matches[i] = local_number
-        elif c == 'e': assert False, 'FIXME, we do not expect any extensions'
+        elif c == 'e': raise NotImplementedError('Was not expecting extension in format', fmt)
         elif c == 'c': last = matches[i] = country_code
-        elif c == 'C': assert False, 'FIXME, what is this?'
+        elif c == 'C': raise NotImplementedError('Was not expecting unknown C in format', fmt)
         elif c == 't': last, matches[i] = '', ('', ' ')[last!='']
-        else: assert False, 'Unknown field descriptor'
+        else: raise ValueError('Unknown field descriptor in format', fmt)
 
     return ''.join(matches)
     
