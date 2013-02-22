@@ -57,31 +57,31 @@ def _strftime(fmt, lc_time, date=None):
         elif c == 'b' or c == 'h': matches[i] = lc_time['abmon'][lt[1] - 1]
         elif c == 'B': matches[i] = lc_time['mon'][lt[1] - 1]
         elif c == 'c': matches[i] = _strftime(lc_time['d_t_fmt'], lc_time, date)
-        elif c == 'C': matches[i] = '%02i' % (lt[0] / 100)
-        elif c == 'd': matches[i] = '%02i' % lt[2]
-        elif c == 'D': matches[i] = '%02i/%02i/%02i' % (lt[1], lt[2], lt[0] % 100)
-        elif c == 'e': matches[i] = '%2i' % lt[2]
+        elif c == 'C': matches[i] = '%02d' % (lt[0] / 100)
+        elif c == 'd': matches[i] = '%02d' % lt[2]
+        elif c == 'D': matches[i] = '%02d/%02d/%02d' % (lt[1], lt[2], lt[0] % 100)
+        elif c == 'e': matches[i] = '%2d' % lt[2]
         # %E => modifier, not implemented
-        elif c == 'F': matches[i] = '%i-%02i-%02i' % (lt[0], lt[1], lt[2])
+        elif c == 'F': matches[i] = '%d-%02d-%02d' % (lt[0], lt[1], lt[2])
         # %G => NOT IMPLEMENTED
         # %g => NOT IMPLEMENTED
-        elif c == 'H': matches[i] = '%02i' % lt[3]
-        elif c == 'I': matches[i] = '%02i' % (((lt[3] + 11) % 12) + 1)
-        elif c == 'j': matches[i] = '%03i' % lt[7]
-        elif c == 'k': matches[i] = '%2i' % lt[3]
-        elif c == 'l': matches[i] = '%2i' % (((lt[3] + 11) % 12) + 1)
-        elif c == 'm': matches[i] = '%02i' % lt[1]
-        elif c == 'M': matches[i] = '%02i' % lt[4]
+        elif c == 'H': matches[i] = '%02d' % lt[3]
+        elif c == 'I': matches[i] = '%02d' % (((lt[3] + 11) % 12) + 1)
+        elif c == 'j': matches[i] = '%03d' % lt[7]
+        elif c == 'k': matches[i] = '%2d' % lt[3]
+        elif c == 'l': matches[i] = '%2d' % (((lt[3] + 11) % 12) + 1)
+        elif c == 'm': matches[i] = '%02d' % lt[1]
+        elif c == 'M': matches[i] = '%02d' % lt[4]
         elif c == 'n': matches[i] = '\n'
         # %O => modifier, not implemented
         elif c == 'p': matches[i] = lc_time['am_pm'][lt[3] >= 12]
         elif c == 'P': matches[i] = lc_time['am_pm'][lt[3] >= 12].lower() # (GNU)
         elif c == 'r': matches[i] = _strftime(lc_time['t_fmt_ampm'], lc_time, date)
-        elif c == 'R': matches[i] = '%02i-%02' % (lt[3], lt[4])
+        elif c == 'R': matches[i] = '%02d-%02' % (lt[3], lt[4])
         elif c == 's': matches[i] = str(time.mktime(date.utcnow()))
-        elif c == 'S': matches[i] = '%02i' % lt[5]
+        elif c == 'S': matches[i] = '%02d' % lt[5]
         elif c == 't': matches[i] = '\t'
-        elif c == 'T': matches[i] = '%02i:%02i:%02i' % (lt[3], lt[4], lt[5])
+        elif c == 'T': matches[i] = '%02d:%02d:%02d' % (lt[3], lt[4], lt[5])
         elif c == 'u': matches[i] = str(lt[6] + 1)
         # %U => NOT IMPLEMENTED
         # %V => NOT IMPLEMENTED
@@ -89,7 +89,7 @@ def _strftime(fmt, lc_time, date=None):
         # %W => NOT IMPLEMENTED
         elif c == 'x': matches[i] = _strftime(lc_time['d_fmt'], lc_time, date)
         elif c == 'X': matches[i] = _strftime(lc_time['t_fmt'], lc_time, date)
-        elif c == 'y': matches[i] = '%02i' % (lt[0] % 100)
+        elif c == 'y': matches[i] = '%02d' % (lt[0] % 100)
         elif c == 'Y': matches[i] = str(lt[0])
         # %z => NOT IMPLEMENTED # (GNU)
         # %Z => NOT IMPLEMENTED
