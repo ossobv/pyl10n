@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # vim: set ts=8 sw=4 sts=4 et:
-#=======================================================================
+# ======================================================================
 # Copyright (C) 2008,2009, Walter Doekes (wdoekes) at OSSO B.V.
 # This file is part of Pyl10n.
 #
@@ -16,12 +16,14 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with Pyl10n.  If not, see <http://www.gnu.org/licenses/>.
-#=======================================================================
+# ======================================================================
 
 
 import os
-try: import cPickle as pickle
-except: import pickle
+try:
+    import cPickle as pickle
+except:
+    import pickle
 # set default locale path to ../locale/
 _locale_path = os.path.join(os.path.dirname(__file__), '..', 'locale')
 # set default locale to C
@@ -31,9 +33,11 @@ _current_locale_callable = lambda: 'C'
 def setlocale(locale):
     setlocalefunc(lambda: locale)
 
+
 def setlocalefunc(callable):
     global _current_locale_callable
     _current_locale_callable = callable
+
 
 def setlocalepath(dirname):
     '''
@@ -47,6 +51,7 @@ def setlocalepath(dirname):
     global _locale_path
     _locale_path = dirname
 
+
 def localeconv(locale=None):
     locale = locale or _get_locale()
     ret = {}
@@ -56,11 +61,14 @@ def localeconv(locale=None):
     assert 0 not in ret['grouping'] and 0 not in ret['mon_grouping']
     return ret
 
+
 def localeconv_by_category(category, locale=None):
     locale = locale or _get_locale()
-    assert category in ('LC_ADDRESS', 'LC_MEASUREMENT', 'LC_MONETARY', \
-            'LC_NAME', 'LC_NUMERIC', 'LC_PAPER', 'LC_TELEPHONE', 'LC_TIME')
+    assert category in (
+        'LC_ADDRESS', 'LC_MEASUREMENT', 'LC_MONETARY', 'LC_NAME',
+        'LC_NUMERIC', 'LC_PAPER', 'LC_TELEPHONE', 'LC_TIME')
     return _get_category(locale, category)
+
 
 def _get_category(locale, category):
     if locale not in _get_category._cache:
@@ -73,9 +81,9 @@ def _get_category(locale, category):
             ret = pickle.load(file)
             assert type(ret) == dict
             catcache[category] = ret
-        except Exception, e:
+        except Exception as e:
             from sys import stderr
-            print >> stderr, 'pyl10n: loading locale category: %s' % e
+            stderr.write('pyl10n: loading locale category: %s\n' % e)
             catcache[category] = {}
         finally:
             if file is not None:
@@ -83,9 +91,11 @@ def _get_category(locale, category):
     return catcache[category]
 _get_category._cache = {}
 
+
 def _get_locale():
     global _current_locale_callable
     return _current_locale_callable()
+
 
 def pyl10n_core_test():
     # TODO: create tests :)

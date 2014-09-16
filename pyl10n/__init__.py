@@ -73,22 +73,22 @@
 # {{{
 # import path.to.pyl10n as locale
 # locale.setlocale('nl_NL')
-# print locale.currency(12345.67)
+# print(locale.currency(12345.67))
 # }}}
 #
 # Using pyl10n in your threaded app:
 # {{{
 # import path.to.pyl10n as locale, datetime
 # locale.setlocalefunc(some_func_that_returns_locale_for_current_thread)
-# print locale.format_time(datetime.datetime.now())
+# print(locale.format_time(datetime.datetime.now()))
 # }}}
 #
 # Quickly switching languages:
 # {{{
 # import path.to.pyl10n as locale, datetime
 # now = datetime.datetime.now()
-# print locale.format_time(now, 'nl_NL')
-# print locale.format_time(now, 'en_US')
+# print(locale.format_time(now, 'nl_NL'))
+# print(locale.format_time(now, 'en_US'))
 # }}}
 
 
@@ -144,7 +144,7 @@ def pyl10n_old_test():
     import __builtin__, locale, sys
 
     for lang in ('nl_NL', 'en_US'):
-        print u'**** %s ****\n' % (lang,)
+        print(u'**** %s ****\n' % (lang,))
         try:
             locale.setlocale(locale.LC_MONETARY, lang + '.utf-8')
             locale.setlocale(locale.LC_NUMERIC, lang + '.utf-8')
@@ -153,18 +153,18 @@ def pyl10n_old_test():
                              'language-pack-nl" or similar..' % (lang,))
         setlocale(lang)
 
-        print u'%24s|%24s' % ('[locale]', '[pyl10n]')
+        print(u'%24s|%24s' % ('[locale]', '[pyl10n]'))
         lconv = locale.localeconv()
         pconv = localeconv()
         keys = lconv.keys()
         keys.sort()
         for k in keys:
-            print u'%24s|%24s <= %s' % (__builtin__.str(lconv[k]).decode('utf-8'), pconv[k], k)
-        print
+            print(u'%24s|%24s <= %s' % (__builtin__.str(lconv[k]).decode('utf-8'), pconv[k], k))
+        print()
 
-        print '%24s|%24s' % ('[locale]', '[pyl10n]')
+        print('%24s|%24s' % ('[locale]', '[pyl10n]'))
 
-        print '%24s|%24s' % (locale.str(-3.1415), str(-3.1415))
+        print('%24s|%24s' % (locale.str(-3.1415), str(-3.1415)))
         for val in (0.7, -0.7, 1234567.89, -1234567.89):
             for monetary in (False, True):
                 lval = locale.format('%f', val, True, monetary).decode('utf-8')
@@ -172,12 +172,12 @@ def pyl10n_old_test():
                 if not monetary:
                     assert val == locale.atof(lval) and val == atof(pval), \
                             'atof() is broken on value \'%s\'' % (val,)
-                print '%24s|%24s' % (lval, pval)
+                print('%24s|%24s' % (lval, pval))
         for val in (0.7, -0.7, 1234567.89, -1234567.89):
             for intl in (False, True):
                 lval = locale.currency(val, True, True, intl).decode('utf-8')
                 pval = currency(val, True, True, intl)
-                print '%24s|%24s' % (lval, pval)
+                print('%24s|%24s' % (lval, pval))
         print
 
         if lang == 'nl_NL':
@@ -191,10 +191,10 @@ def pyl10n_old_test():
             except: pass
             else: assert False, 'atof() should\'ve raised an exception'
 
-        print 'All available locale data:'
+        print('All available locale data:')
         for cat in ('LC_ADDRESS', 'LC_MEASUREMENT', 'LC_MONETARY', \
                 'LC_NAME', 'LC_NUMERIC', 'LC_PAPER', 'LC_TELEPHONE', 'LC_TIME'):
-            print '  ', localeconv_by_category(cat)
+            print('   %s' % (localeconv_by_category(cat),))
         print
 
 
