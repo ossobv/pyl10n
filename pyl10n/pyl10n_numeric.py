@@ -19,7 +19,7 @@
 # ======================================================================
 
 
-import pyl10n_core as _p
+from . import pyl10n_core as _p
 
 
 def format(format, val, grouping=False, monetary=False, dutch_rounding=False,

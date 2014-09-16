@@ -20,7 +20,7 @@
 
 
 import re
-import pyl10n_core as _p
+from . import pyl10n_core as _p
 _percent_re = re.compile(r'(%.|[^%]+)')
 
 

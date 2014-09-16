@@ -21,7 +21,7 @@
 
 import re
 import time
-import pyl10n_core as _p
+from . import pyl10n_core as _p
 _percent_re = re.compile(r'(%.|[^%]+)')  # misses modifiers (like %Ey)
 
 
@@ -102,7 +102,7 @@ def _strftime(fmt, lc_time, date=None):
         elif c == 'Y': matches[i] = str(lt[0])
         # %z => NOT IMPLEMENTED # (GNU)
         # %Z => NOT IMPLEMENTED
-        elif c == 'z' or c == 'Z': matches[i] = ''  # BROKEN AND NOT IMPLEMENTED
+        elif c == 'z' or c == 'Z': matches[i] = ''  # BROKEN, NOT IMPLEMENTED
         # %+ => NOT IMPLEMENTED
 
     return ''.join(matches).strip()

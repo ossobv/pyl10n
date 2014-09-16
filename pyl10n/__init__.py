@@ -134,10 +134,10 @@
 #    previous point.)
 
 
-from pyl10n_core import *
-from pyl10n_numeric import *
-from pyl10n_telephone import *
-from pyl10n_time import *
+from .pyl10n_core import *
+from .pyl10n_numeric import *
+from .pyl10n_telephone import *
+from .pyl10n_time import *
 
 
 def pyl10n_old_test():
