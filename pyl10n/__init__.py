@@ -29,10 +29,11 @@
 # {{{
 # import path.to.pyl10n as locale
 # }}}
-# 
+#
 # The functions that are currently implemented are the following, the
 # (+) marks functions that are not found in the regular locale module.
-# Most functions will also accept an optional callable that returns 
+# Most functions will also accept an optional callable that returns the
+# current locale.
 #
 # FILE pyl10n_core:
 #  * localeconv
