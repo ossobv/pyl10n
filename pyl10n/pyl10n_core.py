@@ -25,7 +25,7 @@ try:
 except:
     import pickle
 # set default locale path to ../locale/
-_locale_path = os.path.join(os.path.dirname(__file__), '..', 'locale')
+_locale_path = os.path.join(os.path.dirname(__file__), 'locale')
 # set default locale to C
 _current_locale_callable = lambda: 'C'
 
