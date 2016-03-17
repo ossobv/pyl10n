@@ -8,7 +8,7 @@ if __name__ == '__main__':
 
     setup(
         name='pyl10n',
-        version='1.0rc1',
+        version='1.0rc2',
         packages=['pyl10n'],
         # Include all locale non-py files in pyl10n as well.
         package_data={'pyl10n': ['locale/README', 'locale/*/LC_*']},
