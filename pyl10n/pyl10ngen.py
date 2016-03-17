@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # vim: set ts=8 sw=4 sts=4 et:
 # ======================================================================
-# Copyright (C) 2008,2009, Walter Doekes (wdoekes) at OSSO B.V.
+# Copyright (C) 2008-2016 Walter Doekes (wdoekes) at OSSO B.V.
 # This file is part of Pyl10n.
 #
 # Pyl10n is free software: you can redistribute it and/or modify

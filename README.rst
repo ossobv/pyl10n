@@ -26,7 +26,7 @@ PORTABILITY
 -----------
 
 Pyl10n has been tested with python 2.5 through 2.7 on Debian/Ubuntu
-Linux systems.
+Linux systems. It's been known to work with Python 3 as well.
 
 
 EXAMPLE
@@ -34,13 +34,13 @@ EXAMPLE
 
 Import pyl10n as locale:
 
-.. code-block:: python
+.. code-block:: pycon
 
     >>> import pyl10n as locale
 
 Hardcode the current thread locale.
 
-.. code-block:: python
+.. code-block:: pycon
 
     >>> locale.setlocale('nl_NL')
     >>> print(locale.currency(12345.67))
@@ -49,12 +49,39 @@ Hardcode the current thread locale.
 Usually you'll want to set a function that returns the current thread
 locale.
 
-.. code-block:: python
+.. code-block:: pycon
 
     >>> getlocale = lambda: 'en_US'
     >>> locale.setlocalefunc(getlocale)
     >>> print(locale.format('%f', 12345.67, True, True))
     12,345.67
+
+If you're using your own locale files, you may set up the path like this:
+
+.. code-block:: console
+
+    $ ls path/to/locale/en/ -1p
+    LC_ADDRESS
+    LC_MEASUREMENT
+    LC_MESSAGES/
+    LC_MONETARY
+    LC_NAME
+    LC_NUMERIC
+    LC_PAPER
+    LC_TELEPHONE
+    LC_TIME
+
+.. code-block:: pycon
+
+    >>> locale.setlocalepath('path/to/locale')
+    >>> locale.setlocale('en')
+    >>> locale.teldom2string((31, 50, 1234567))
+    '(50) 1234567'
+    >>> locale.setlocale('sv')
+    >>> locale.teldom2string((31, 50, 1234567))
+    '050-1234567'
+
+The data files are stored/read using pickle.
 
 
 LIMITATIONS
