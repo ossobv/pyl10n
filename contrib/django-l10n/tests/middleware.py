@@ -16,12 +16,12 @@ class LanguageSelectTest(TestCase):
         # Restore messed with settings
         settings.LANGUAGE_CODE = self.SETTINGS_LANGUAGE_CODE
         settings.LANGUAGE_CODES = self.SETTINGS_LANGUAGE_CODES
-    
+
     def test_single_language(self):
         if hasattr(settings, 'LANGUAGE_CODES'):
             settings.LANGUAGE_CODES = ()
         settings.LANGUAGE_CODE = 'sv'
-      
+
         response = self.client.get('/', HTTP_ACCEPT_LANGUAGE=self.ACCEPT_LANGUAGE)
 
         # The middleware should be disabled because of the single language,

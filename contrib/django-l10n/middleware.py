@@ -79,7 +79,7 @@ class L10nMiddleware(object):
         '''
         Parses the lang_string, which is the body of an HTTP Accept-Language
         header, and returns a list of (lang, q-value), ordered by 'q' values.
-    
+
         Any format errors in lang_string results in an empty list being returned.
 
         (stolen from django and modified)
