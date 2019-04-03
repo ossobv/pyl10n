@@ -19,15 +19,13 @@
 # ======================================================================
 
 
+import json
 import os
-try:
-    import cPickle as pickle
-except:
-    import pickle
+
 # set default locale path to ../locale/
 _locale_path = os.path.join(os.path.dirname(__file__), 'locale')
 # set default locale to C
-_current_locale_callable = lambda: 'C'
+_current_locale_callable = (lambda: 'C')
 
 
 def setlocale(locale):
@@ -78,7 +76,7 @@ def _get_category(locale, category):
         file = None
         try:
             file = open(os.path.join(_locale_path, locale, category), 'rb')
-            ret = pickle.load(file)
+            ret = json.load(file)
             assert type(ret) == dict
             catcache[category] = ret
         except Exception as e:
