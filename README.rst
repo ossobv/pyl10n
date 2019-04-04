@@ -84,6 +84,21 @@ If you're using your own locale files, you may set up the path like this:
 The data files are stored/read using pickle.
 
 
+TESTS
+-----
+
+A quick selftest can be run:
+
+.. code-block:: shell
+
+    $ python -c 'from pyl10n import selftest; selftest()'
+    ...
+
+Differences between the locale output and the pyl10n output *may* be
+attributed to an alternate/earlier source of locale date, or to custom
+adjustments (improvements) by me (to the Dutch or English locale files).
+
+
 LIMITATIONS
 -----------
 

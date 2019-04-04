@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # vim: set ts=8 sw=4 sts=4 et:
-#=======================================================================
+# ======================================================================
 # Copyright (C) 2008-2016 Walter Doekes (wdoekes) at OSSO B.V.
 # This file is part of Pyl10n.
 #
@@ -16,7 +16,7 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with Pyl10n.  If not, see <http://www.gnu.org/licenses/>.
-#=======================================================================
+# ======================================================================
 
 
 # INTRODUCTION
@@ -132,7 +132,7 @@
 #    (e.g. strcoll, strxfrm, format_string).
 #  * string.letters is not modified when calling setlocale(). (See the
 #    previous point.)
-
+from __future__ import print_function, unicode_literals
 
 from .pyl10n_core import *
 from .pyl10n_numeric import *
@@ -141,25 +141,29 @@ from .pyl10n_time import *
 
 
 def pyl10n_old_test():
-    import __builtin__, locale, sys
+    import __builtin__
+    import locale
+    import json
 
     for lang in ('nl_NL', 'en_US'):
-        print(u'**** %s ****\n' % (lang,))
+        print('**** %s ****\n' % (lang,))
         try:
             locale.setlocale(locale.LC_MONETARY, lang + '.utf-8')
             locale.setlocale(locale.LC_NUMERIC, lang + '.utf-8')
         except locale.Error:
-            raise ValueError('Need %s.utf-8 locale for this test. Please "apt-get install '
-                             'language-pack-nl" or similar..' % (lang,))
+            raise ValueError(
+                'Need %s.utf-8 locale for this test. Please "apt-get install '
+                'language-pack-nl" or similar..' % (lang,))
         setlocale(lang)
 
-        print(u'%24s|%24s' % ('[locale]', '[pyl10n]'))
+        print('%24s|%24s' % ('[locale]', '[pyl10n]'))
         lconv = locale.localeconv()
         pconv = localeconv()
         keys = lconv.keys()
         keys.sort()
         for k in keys:
-            print(u'%24s|%24s <= %s' % (__builtin__.str(lconv[k]).decode('utf-8'), pconv[k], k))
+            print('%24s|%24s <= %s' % (
+                __builtin__.str(lconv[k]).decode('utf-8'), pconv[k], k))
         print()
 
         print('%24s|%24s' % ('[locale]', '[pyl10n]'))
@@ -167,40 +171,56 @@ def pyl10n_old_test():
         print('%24s|%24s' % (locale.str(-3.1415), str(-3.1415)))
         for val in (0.7, -0.7, 1234567.89, -1234567.89):
             for monetary in (False, True):
-                lval = locale.format('%f', val, True, monetary).decode('utf-8')
+                lval = (
+                    locale.format(b'%f', val, True, monetary).decode('utf-8'))
                 pval = format('%f', val, True, monetary)
+
                 if not monetary:
                     assert val == locale.atof(lval) and val == atof(pval), \
                             'atof() is broken on value \'%s\'' % (val,)
                 print('%24s|%24s' % (lval, pval))
+
         for val in (0.7, -0.7, 1234567.89, -1234567.89):
             for intl in (False, True):
                 lval = locale.currency(val, True, True, intl).decode('utf-8')
                 pval = currency(val, True, True, intl)
                 print('%24s|%24s' % (lval, pval))
-        print
+        print()
 
         if lang == 'nl_NL':
             assert atof('1012,34', allow_grouping=True) == 1012.34
-            try: atof('123.000', allow_grouping=False)
-            except: pass
-            else: assert False, 'atof() should\'ve raised an exception'
+            try:
+                atof('123.000', allow_grouping=False)
+            except:
+                pass
+            else:
+                assert False, 'atof() should\'ve raised an exception'
         elif lang == 'en_US':
             assert atof('1,012.34', allow_grouping=True) == 1012.34
-            try: atof('123,000', allow_grouping=False)
-            except: pass
-            else: assert False, 'atof() should\'ve raised an exception'
+            try:
+                atof('123,000', allow_grouping=False)
+            except:
+                pass
+            else:
+                assert False, 'atof() should\'ve raised an exception'
 
         print('All available locale data:')
-        for cat in ('LC_ADDRESS', 'LC_MEASUREMENT', 'LC_MONETARY', \
-                'LC_NAME', 'LC_NUMERIC', 'LC_PAPER', 'LC_TELEPHONE', 'LC_TIME'):
-            print('   %s' % (localeconv_by_category(cat),))
-        print
+        for cat in (
+                'LC_ADDRESS', 'LC_MEASUREMENT', 'LC_MONETARY',
+                'LC_NAME', 'LC_NUMERIC', 'LC_PAPER', 'LC_TELEPHONE',
+                'LC_TIME'):
+            print('   %s' % (
+                json.dumps(localeconv_by_category(cat), sort_keys=True),))
+        print()
 
 
-if __name__ == '__main__':
-    import codecs, locale, sys
-    sys.stdout = codecs.getwriter(locale.getdefaultlocale()[1])(sys.stdout, 'replace')
+def selftest():
+    import codecs
+    import locale
+    import sys
+
+    sys.stdout = (
+        codecs.getwriter(locale.getdefaultlocale()[1])(sys.stdout, 'replace'))
 
     pyl10n_core_test()
     pyl10n_numeric_test()
