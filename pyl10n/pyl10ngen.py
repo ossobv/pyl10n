@@ -115,9 +115,7 @@ def parse_args(string, escape_char):
     return ret
 
 
-def parse_libc_localedata(filename, cache=None):
-    if cache is None:
-        cache = {}
+def parse_libc_localedata(filename, cache):
     if filename in cache:
         return cache[filename]
     cache[filename] = None  # catch broken recursion: will fail on .get access
@@ -126,16 +124,20 @@ def parse_libc_localedata(filename, cache=None):
     ret = {}
 
     input = open(filename, 'rb')
-    comment_char, escape_char = '#', '\\'
+    comment_char, escape_char = '#', '\\\\'
     category = None
     multiline_buffer = False
 
-    re_cat = re.compile(r'^(LC_[A-Z]+)$', re.DOTALL)
+    re_cat_s = r'^(LC_[A-Z]+)(\s*Comment\s+.*)?$'
+    re_cat = re.compile(re_cat_s.replace('Comment', comment_char), re.DOTALL)
     re_stmt = re.compile(r'^([A-Za-z_]+)\s+(.*?)$', re.DOTALL)
-    re_comment_s = r'^Comment.*$'
+    re_comment_s = r'^Comment(\s+.*)?$'
     re_comment = re.compile(
-        re_comment_s.replace('Comment',
-                             comment_char * (int(comment_char == '\\') + 1)))
+        re_comment_s.replace('Comment', comment_char))
+    re_midcomment_s = r'^(([^"]|"[^"]*")+)Comment.*(Escape)$'
+    re_midcomment = re.compile(
+        re_midcomment_s.replace(
+            'Comment', comment_char).replace('Escape', escape_char))
     re_multiline_s = r'(^|[^Escape]|EscapeEscape)*Escape$'
     re_multiline = re.compile(
         re_multiline_s.replace('Escape',
@@ -144,15 +146,19 @@ def parse_libc_localedata(filename, cache=None):
     for line in itertools.chain(input, ('\n',)):  # append LF to complete work
         # Treat as utf-8, ignore whitespace
         line = line.decode('utf-8').strip()
+        # Drop trailing comments
+        comm = re_midcomment.match(line)
+        if comm:
+            line = comm.group(1).rstrip() + comm.group(3)
         # Ignore comments (escape char on EOL does not "work")
         if re_comment.match(line):
             continue
         # If previous line was multiline, append
         if multiline_buffer:
-            line = multiline_buffer + line.strip()
+            line = multiline_buffer + line.lstrip()
         # If line matches multiline, set multiline_buffer and restart
         if re_multiline.match(line):
-            multiline_buffer = line[:-len(escape_char)].strip()  # strip too..
+            multiline_buffer = line[:-len(escape_char)]
             continue
         multiline_buffer = False
 
@@ -178,15 +184,25 @@ def parse_libc_localedata(filename, cache=None):
             # Switch comment character
             elif keyword == 'comment_char':
                 comment_char = args
-                n = int(comment_char == '\\') + 1
+                if args == '\\':
+                    comment_char = '\\\\'
+                re_cat = re.compile(
+                    re_cat_s.replace('Comment', comment_char), re.DOTALL)
                 re_comment = re.compile(
-                    re_comment_s.replace('Comment', comment_char * n))
+                    re_comment_s.replace('Comment', comment_char))
+                re_midcomment = re.compile(
+                    re_midcomment_s.replace(
+                        'Comment', comment_char).replace('Escape', escape_char))
             # Switch escape character
             elif keyword == 'escape_char':
                 escape_char = args
-                n = int(escape_char == '\\') + 1
+                if args == '\\':
+                    escape_char = '\\\\'
                 re_multiline = re.compile(
-                    re_multiline_s.replace('Escape', escape_char * n))
+                    re_multiline_s.replace('Escape', escape_char))
+                re_midcomment = re.compile(
+                    re_midcomment_s.replace(
+                        'Comment', comment_char).replace('Escape', escape_char))
             # Load other file
             elif keyword == 'copy':
                 new_filename = os.path.join(
@@ -271,7 +287,7 @@ def convert_all_libc_locales(src_path, dst_path):
     print('Processing languages...')
     cache = {}
     for languagecode, filename in languages:
-        # if languagecode != 'da_DK':
+        # if languagecode != 'uk_UA':
         #     continue
         sys.stdout.write('\r%s\r%s' % (' ' * 16, languagecode))
         sys.stdout.flush()
@@ -302,5 +318,5 @@ def convert_all_libc_locales(src_path, dst_path):
 if __name__ == '__main__':
     convert_all_libc_locales(
         '/usr/share/i18n/locales',
-        os.path.join(os.path.dirname(__file__), '..', 'locale')
+        os.path.join(os.path.dirname(__file__), 'locale')
     )
