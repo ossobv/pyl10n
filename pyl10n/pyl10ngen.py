@@ -46,15 +46,14 @@
 #  * We only use the categories defines in the CATEGORIES list and not
 #    LC_CTYPE/LC_COLLATE.. they are complicated and beyond the scope of
 #    pyl10ns intentions right now.
-#  * I suspect that the copy keyword in a category tells us that you
-#    should only read that category from the copied file. Currently it
-#    reads everything from copied files (and uses loop_check to guard
-#    against infinite recursion).
+#  * The copy keyword in a category tells us that you should only read
+#    that category from the copied file.
 #  * There is an 'include' keyword. We don't use it yet.
 #  * We strip trailing zeroes from a list (e.g. mon_grouping 3;3;0
 #    becomes [3,3]). This is not a bug but a deviation from the
 #    C-documentation.
 
+from __future__ import unicode_literals
 
 import itertools
 import os
@@ -116,12 +115,12 @@ def parse_args(string, escape_char):
     return ret
 
 
-def parse_libc_localedata(filename, loop_check=None):
-    # Trap infinite recursion
-    loop_check = loop_check or []
-    if filename in loop_check:
-        return {}
-    loop_check.append(filename)
+def parse_libc_localedata(filename, cache=None):
+    if cache is None:
+        cache = {}
+    if filename in cache:
+        return cache[filename]
+    cache[filename] = None  # catch broken recursion: will fail on .get access
 
     # The result
     ret = {}
@@ -143,13 +142,13 @@ def parse_libc_localedata(filename, loop_check=None):
                                escape_char * (int(escape_char == '\\') + 1)))
 
     for line in itertools.chain(input, ('\n',)):  # append LF to complete work
-        # Ignore extra whitespace
-        line = line.strip()
+        # Treat as utf-8, ignore whitespace
+        line = line.decode('utf-8').strip()
         # Ignore comments (escape char on EOL does not "work")
         if re_comment.match(line):
             continue
         # If previous line was multiline, append
-        if not multiline_buffer:
+        if multiline_buffer:
             line = multiline_buffer + line.strip()
         # If line matches multiline, set multiline_buffer and restart
         if re_multiline.match(line):
@@ -190,15 +189,19 @@ def parse_libc_localedata(filename, loop_check=None):
                     re_multiline_s.replace('Escape', escape_char * n))
             # Load other file
             elif keyword == 'copy':
-                recurse_data = parse_libc_localedata(
-                    os.path.join(os.path.dirname(filename),
-                                 parse_args(args, escape_char)[0]),
-                    loop_check)
+                new_filename = os.path.join(
+                    os.path.dirname(filename),
+                    parse_args(args, escape_char)[0])
+                recurse_data = parse_libc_localedata(new_filename, cache)
+                if recurse_data is None:
+                    raise ParseException(
+                        'recursion during copy from %s to %s' % (
+                            new_filename, filename))
                 # Merge inner file data
-                for recurse_cat in recurse_data:
-                    if recurse_cat not in ret:
-                        ret[recurse_cat] = {}
-                    ret[recurse_cat].update(recurse_data[recurse_cat])
+                for copy_cat in (category,) if category else recurse_data:
+                    if copy_cat not in ret:
+                        ret[copy_cat] = {}
+                    ret[copy_cat].update(recurse_data.get(copy_cat, {}))
             # Wow.. we even have defines...
             elif keyword == 'ifdef' or keyword == 'define':
                 pass
@@ -240,6 +243,8 @@ def parse_libc_localedata(filename, loop_check=None):
     for key in ret.keys():
         if len(ret[key]) == 0:
             del ret[key]
+
+    cache[filename] = ret
     return ret
 
 
@@ -255,10 +260,7 @@ def get_libc_sources(locale_path='/usr/share/i18n/locales'):
 
 
 def convert_all_libc_locales(src_path, dst_path):
-    try:
-        import cPickle as pickle
-    except:
-        import pickle
+    import json
     import sys
 
     languages = get_libc_sources(src_path)
@@ -267,25 +269,32 @@ def convert_all_libc_locales(src_path, dst_path):
 #    sys.exit(1)
 
     print('Processing languages...')
-    for language in languages:
-        sys.stdout.write('\r%s\r%s' % (' ' * 16, language[0]))
+    cache = {}
+    for languagecode, filename in languages:
+        # if languagecode != 'da_DK':
+        #     continue
+        sys.stdout.write('\r%s\r%s' % (' ' * 16, languagecode))
         sys.stdout.flush()
         try:
-            localedata = parse_libc_localedata(language[1])
+            localedata = parse_libc_localedata(filename, cache)
+            if localedata is None:
+                raise ParseException('broken recursion?')
+        except ParseException as e:
+            sys.stdout.write('\n')
+            sys.stderr.write('Language file %s corrupt: %s\n' % (
+                filename, e))
+        else:
             try:
-                os.mkdir(os.path.join(dst_path, language[0]))
+                os.mkdir(os.path.join(dst_path, languagecode))
             except OSError:
                 pass
             for category in localedata:
-                dst_file = open(os.path.join(dst_path, language[0], category),
+                dst_file = open(os.path.join(dst_path, languagecode, category),
                                 'wb')
-                pickle.dump(localedata[category], dst_file,
-                            pickle.HIGHEST_PROTOCOL)
-                del dst_file
-        except ParseException as e:
-            sys.stdout.write('\n')
-            sys.stderr.write('Language file %s corrupt: %s\n' %
-                             (language[1], e))
+                json.dump(
+                    obj=localedata[category], fp=dst_file,
+                    sort_keys=True, separators=(',', ':'))
+                dst_file.close()
 
     print('\r%s\r...done' % (' ' * 16,))
 
