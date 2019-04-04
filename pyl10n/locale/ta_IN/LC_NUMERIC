@@ -1,1 +1,1 @@
-{"decimal_point":".","grouping":3,"thousands_sep":","}
+{"decimal_point":".","grouping":[3,2],"thousands_sep":","}
