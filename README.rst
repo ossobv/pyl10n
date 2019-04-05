@@ -28,6 +28,17 @@ PORTABILITY
 Pyl10n has been tested with python 2.5 through 2.7 on Debian/Ubuntu
 Linux systems. It's been known to work with Python 3 as well.
 
+Python support before 2.7 cannot be guaranteed. Python support for 3 is
+not well tested.
+
+
+TODO
+----
+
+The generated locale files should be packaged separately so you don't
+need to fetch them when using pyl10n with only a handful of selected
+languages.
+
 
 EXAMPLE
 -------
