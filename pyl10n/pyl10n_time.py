@@ -17,7 +17,7 @@
 # You should have received a copy of the GNU General Public License
 # along with Pyl10n.  If not, see <http://www.gnu.org/licenses/>.
 # ======================================================================
-
+from __future__ import unicode_literals
 
 import re
 import time
@@ -86,7 +86,7 @@ def _strftime(fmt, lc_time, date=None):
         elif c == 'P': matches[i] = lc_time['am_pm'][lt[3] >= 12].lower()  # (GNU)
         elif c == 'r': matches[i] = _strftime(lc_time['t_fmt_ampm'], lc_time,
                                               date)
-        elif c == 'R': matches[i] = '%02d-%02' % (lt[3], lt[4])
+        elif c == 'R': matches[i] = '%02d-%02d' % (lt[3], lt[4])
         elif c == 's': matches[i] = str(time.mktime(date.utcnow()))
         elif c == 'S': matches[i] = '%02d' % lt[5]
         elif c == 't': matches[i] = '\t'

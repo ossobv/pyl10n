@@ -59,6 +59,8 @@ import itertools
 import os
 import re
 
+import six
+
 # Read only these categories.. set to None to read all.
 CATEGORIES = ('LC_ADDRESS', 'LC_MEASUREMENT', 'LC_MONETARY',
               'LC_NAME', 'LC_NUMERIC', 'LC_PAPER', 'LC_TELEPHONE',
@@ -96,14 +98,15 @@ def parse_args(string, escape_char):
             ret[i] = int(ret[i])
         elif ret[i][0] == '"':
             try:
-                ret[i] = unicode(ret[i][1:-1].replace(escape_char * 2,
-                                                      escape_char))
+                ret[i] = six.text_type(ret[i][1:-1].replace(escape_char * 2,
+                                                            escape_char))
                 j = 0
                 while j < len(ret[i]):
                     if (ret[i][j] == '<' and ret[i][j + 1] == 'U' and
                             ret[i][j + 6] == '>'):
                         ret[i] = (ret[i][0:j] +
-                                  unichr(int(ret[i][(j + 2):(j + 6)], 16)) +
+                                  six.unichr(
+                                      int(ret[i][(j + 2):(j + 6)], 16)) +
                                   ret[i][(j + 7):])
                     j += 1
             except UnicodeDecodeError:
@@ -192,7 +195,8 @@ def parse_libc_localedata(filename, cache):
                     re_comment_s.replace('Comment', comment_char))
                 re_midcomment = re.compile(
                     re_midcomment_s.replace(
-                        'Comment', comment_char).replace('Escape', escape_char))
+                        'Comment', comment_char).replace(
+                            'Escape', escape_char))
             # Switch escape character
             elif keyword == 'escape_char':
                 escape_char = args
@@ -202,7 +206,8 @@ def parse_libc_localedata(filename, cache):
                     re_multiline_s.replace('Escape', escape_char))
                 re_midcomment = re.compile(
                     re_midcomment_s.replace(
-                        'Comment', comment_char).replace('Escape', escape_char))
+                        'Comment', comment_char).replace(
+                            'Escape', escape_char))
             # Load other file
             elif keyword == 'copy':
                 new_filename = os.path.join(

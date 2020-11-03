@@ -1,14 +1,17 @@
 #!/usr/bin/env python
+from __future__ import unicode_literals
+
 from distutils.core import setup
+import io
 
 if __name__ == '__main__':
     long_descriptions = []
-    with open('README.rst') as file:
+    with io.open('README.rst', encoding='utf-8') as file:
         long_descriptions.append(file.read())
 
     setup(
         name='pyl10n',
-        version='1.0',
+        version='1.1',
         packages=['pyl10n'],
         # Include all locale non-py files in pyl10n as well.
         package_data={'pyl10n': ['locale/README', 'locale/*/LC_*']},

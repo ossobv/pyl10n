@@ -17,7 +17,7 @@
 # You should have received a copy of the GNU General Public License
 # along with Pyl10n.  If not, see <http://www.gnu.org/licenses/>.
 # ======================================================================
-
+from __future__ import unicode_literals
 
 import json
 import os
@@ -87,6 +87,8 @@ def _get_category(locale, category):
             if file is not None:
                 file.close()
     return catcache[category]
+
+
 _get_category._cache = {}
 
 

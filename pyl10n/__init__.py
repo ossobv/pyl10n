@@ -191,7 +191,7 @@ def pyl10n_old_test():
             assert atof('1012,34', allow_grouping=True) == 1012.34
             try:
                 atof('123.000', allow_grouping=False)
-            except:
+            except Exception:
                 pass
             else:
                 assert False, 'atof() should\'ve raised an exception'
@@ -199,7 +199,7 @@ def pyl10n_old_test():
             assert atof('1,012.34', allow_grouping=True) == 1012.34
             try:
                 atof('123,000', allow_grouping=False)
-            except:
+            except Exception:
                 pass
             else:
                 assert False, 'atof() should\'ve raised an exception'
