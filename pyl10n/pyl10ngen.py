@@ -55,6 +55,7 @@
 
 from __future__ import unicode_literals
 
+import io
 import itertools
 import os
 import re
@@ -126,7 +127,7 @@ def parse_libc_localedata(filename, cache):
     # The result
     ret = {}
 
-    input = open(filename, 'rb')
+    input = io.open(filename, 'r', encoding='utf-8')
     comment_char, escape_char = '#', '\\\\'
     category = None
     multiline_buffer = False
@@ -148,7 +149,7 @@ def parse_libc_localedata(filename, cache):
 
     for line in itertools.chain(input, ('\n',)):  # append LF to complete work
         # Treat as utf-8, ignore whitespace
-        line = line.decode('utf-8').strip()
+        line = line.strip()
         # Drop trailing comments
         comm = re_midcomment.match(line)
         if comm:
@@ -261,7 +262,7 @@ def parse_libc_localedata(filename, cache):
                 pass
 
     # Purge empty categories
-    for key in ret.keys():
+    for key in list(ret.keys()):
         if len(ret[key]) == 0:
             del ret[key]
 
@@ -311,7 +312,7 @@ def convert_all_libc_locales(src_path, dst_path):
                 pass
             for category in localedata:
                 dst_file = open(os.path.join(dst_path, languagecode, category),
-                                'wb')
+                                'w', encoding='utf-8')
                 json.dump(
                     obj=localedata[category], fp=dst_file,
                     sort_keys=True, separators=(',', ':'))

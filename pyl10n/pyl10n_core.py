@@ -19,6 +19,7 @@
 # ======================================================================
 from __future__ import unicode_literals
 
+import io
 import json
 import os
 
@@ -75,7 +76,8 @@ def _get_category(locale, category):
     if category not in catcache:
         file = None
         try:
-            file = open(os.path.join(_locale_path, locale, category), 'rb')
+            file = io.open(os.path.join(_locale_path, locale, category), 'r',
+                           encoding='utf-8')
             ret = json.load(file)
             assert type(ret) == dict
             catcache[category] = ret
