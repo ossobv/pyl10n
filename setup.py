@@ -1,6 +1,4 @@
 #!/usr/bin/env python
-from __future__ import unicode_literals
-
 from distutils.core import setup
 import io
 
@@ -19,7 +17,7 @@ if __name__ == '__main__':
         # open it during install.
         data_files=[('share/doc/pyl10n', ['README.rst'])],
         description='Pyl10n is a localization (l10n) library for python',
-        long_description=('\n\n\n'.join(long_descriptions)),
+        long_description=(u'\n\n\n'.join(long_descriptions)),
         author='Walter Doekes, OSSO B.V.',
         author_email='wjdoekes+pyl10n@osso.nl',
         url='https://github.com/ossobv/pyl10n',
